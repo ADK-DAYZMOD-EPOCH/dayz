@@ -8,6 +8,47 @@ s_player_elevator_upgrade = 1;
 player removeAction s_player_elevator_upgrade_stop;
 s_player_elevator_upgrade_stop = 1;
 
+// check for near plot
+_canBuildOnPlot = false;
+_distance = DZE_PlotPole select 0;
+_needText = localize "str_epoch_player_246";
+_findNearestPoles = nearestObjects [(vehicle player), ["Plastic_Pole_EP1_DZ"], _distance];
+_findNearestPole = [];
+
+
+{
+if (alive _x) then {
+_findNearestPole set [(count _findNearestPole),_x];
+};
+} foreach _findNearestPoles;
+
+
+_IsNearPlot = count (_findNearestPole);
+
+
+if(_IsNearPlot == 0) then {
+_canBuildOnPlot = true;
+} else {
+// Since there are plots nearby we check for ownership and then for friend status 
+// check nearby plots ownership and then for friend status
+_nearestPole = _findNearestPole select 0;
+// Find owner 
+_ownerID = _nearestPole getVariable["CharacterID","0"];
+// diag_log format["DEBUG BUILDING: %1 = %2", dayz_characterID, _ownerID];
+// check if friendly to owner
+if(dayz_characterID == _ownerID) then {  //Keep ownership
+// owner can build anything within his plot except other plots
+_canBuildOnPlot = true; 
+} else {
+_friendlies = player getVariable ["friendlyTo",[]];
+// check if friendly to owner
+if(_ownerID in _friendlies) then {
+_canBuildOnPlot = true;
+};
+};
+};
+if(!_canBuildOnPlot) exitWith {  DZE_ActionInProgress = false; cutText [format[(localize "STR_EPOCH_PLAYER_135"),_needText,_distance] , "PLAIN DOWN"]; };
+
 _args = _this select 3;
 _option = _args select 0;
 switch (_option) do {
